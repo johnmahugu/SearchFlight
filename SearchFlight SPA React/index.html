@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Flights</title>
+
+    <script src="https://unpkg.com/react@15/dist/react.js"></script>
+    <script src="https://unpkg.com/react-dom@15/dist/react-dom.js"></script>
+    <script src="https://unpkg.com/babel-standalone@6.15.0/babel.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="http://maps.googleapis.com/maps/api/js?sensor=false&amp;libraries=places"></script>
+    <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <script src="http://ubilabs.github.io/geocomplete/jquery.geocomplete.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <link rel="stylesheet" type="text/css" href="styles.css">
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+
+</head>
+
+<body>
+    <div class="container-fluid">
+        <div id="heading"></div>
+        <div id="directions">
+            <label for="from">flying from:</label>
+            <input type="text" class="form-control" id="from">
+            <label for="to">flying to:</label>
+            <input type="text" class="form-control" id="to">
+        </div>
+        <div id="dates">
+            <label for="departure">departure:</label>
+            <input type="text" class="form-control" id="departure">
+            <label for="returnDate">return:</label>
+            <input type="text" class="form-control" id="returnDate" placeholder="No return">          
+        </div>
+        <div id="submition"></div>
+    </div>
+
+    <script type="text/babel">
+        $(function(){        
+            $("#from").geocomplete();
+            $("#to").geocomplete();              
+        });
+        $( function() {
+            $( "#departure" ).datepicker({ dateFormat: 'dd/mm/yy' });
+            $( "#returnDate" ).datepicker({ dateFormat: 'dd/mm/yy' });
+        });
+
+        var Buttonify = React.createClass({
+            
+            loadFlightInfo: function(e){
+                var cityFrom = $('#from').val();
+                var cityTo = $('#to').val();
+                var depTime = $('#departure').val();
+                var rTime = $('#returnDate').val();
+                
+                $.getJSON('https://api.skypicker.com/flights?v=2&locale=en&flyFrom=' + cityFrom + '&to=' + cityTo + '&dateFrom=' + depTime + '&dateTo=' + depTime + '&typeFlight=return&returnFrom=' + rTime + '&returnTo=' + rTime)
+                .then((data) => {
+                    this.setFlightsListState(data);
+                });
+                
+            },
+
+            setFlightsListState: function(flights) {
+                this.setState({
+                    flights: flights.data
+                });
+            },
+
+            getInitialState: function() {
+                return {
+                    flights: []
+                };
+            },
+
+            componentDidMount: function() {
+                this.loadFlightInfo();
+            },
+
+            render: function() { 
+                var flights = this.state.flights.map(function(flight) {
+                    console.log(flight);
+                    return (
+                        <li key={flight.id}>Flyin form {flight.cityFrom} to {flight.cityTo}, flight duration: {flight.fly_duration}, price: {flight.price} EUR</li>
+                    );
+                });
+
+                return (
+                    <div>
+                        <div>
+                            <button className="btn btn-info"  onClick={this.loadFlightInfo} type={this.props.behaivior}>{this.props.children}</button>
+                        </div>
+                        <div>
+                            <h3>Results:</h3>
+                            <ul>
+                              {flights}
+                            </ul>
+                          
+                        </div>
+                    </div>
+                ); 
+            } 
+        }); 
+        ReactDOM.render(
+            <div>
+                <h1> Search for yout flight </h1>
+            </div>, 
+            document.querySelector("#heading") 
+        ); 
+        ReactDOM.render(
+            <div>
+                <Buttonify behaivior="Submit">Search for flights</Buttonify>
+
+            </div>, 
+            document.querySelector('#submition') 
+        );
+    </script>
+</body>
+
+</html>
